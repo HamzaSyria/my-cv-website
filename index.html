@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional CV Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #000000;
+            --light-text: #ecf0f1;
+            --section-border: 2px solid #000;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-text);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+        
+        .language-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .language-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .language-btn:hover {
+            background: var(--accent-color);
+        }
+        
+        .cv-generator {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .form-container {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-container {
+            flex: 1;
+            min-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: visible;
+            max-height: none;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: var(--section-border);
+        }
+        
+        .form-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark-text);
+            font-size: 0.9rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 0.9rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .photo-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .photo-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #eee;
+            margin-bottom: 10px;
+            overflow: hidden;
+            border: 3px solid var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-upload label {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .photo-upload label:hover {
+            background-color: var(--accent-color);
+        }
+        
+        .photo-upload input {
+            display: none;
+        }
+        
+        .btn-generate {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 0;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-generate:hover {
+            background-color: #c0392b;
+        }
+        
+        /* CV Preview Styling */
+        .cv-preview {
+            font-family: 'Times New Roman', Times, serif;
+            padding: 30px;
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            box-sizing: border-box;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .cv-page-break {
+            height: 0;
+            visibility: hidden;
+            page-break-after: always;
+        }
+        
+        .cv-header {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #000;
+            align-items: center;
+        }
+        
+        .cv-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 30px;
+            border: 3px solid var(--primary-color);
+        }
+        
+        .cv-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .cv-info {
+            flex: 1;
+        }
+        
+        .cv-name {
+            font-size: 24px;
+            margin: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .cv-title {
+            font-size: 18px;
+            margin: 5px 0;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .cv-contact {
+            font-size: 14px;
+            color: #000;
+            margin-top: 10px;
+        }
+        
+        .cv-contact p {
+            margin: 3px 0;
+        }
+        
+        .cv-section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+        
+        .cv-section h2 {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+        }
+        
+        .cv-section p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .cv-experience {
+            margin-bottom: 20px;
+        }
+        
+        .cv-experience h3 {
+            margin: 5px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .cv-experience .date {
+            color: #777;
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        .cv-experience ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .cv-experience li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .cv-skills ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0;
+            margin: 10px 0;
+        }
+        
+        .cv-skills li {
+            list-style: none;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        /* License Number Field */
+        .license-group {
+            display: none;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+        }
+        
+        footer a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .developer-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .developer-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modal-btn.confirm {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .modal-btn.cancel {
+            background-color: #ddd;
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .cv-generator {
+                flex-direction: column;
+            }
+            
+            .cv-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .cv-photo {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .cv-preview {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Language Switcher Button -->
+        <div class="language-container">
+            <button class="language-btn" id="switchLanguage">العربية</button>
+        </div>
+        
+        <header>
+            <h1 id="mainTitle">Professional CV Generator</h1>
+        </header>
+        
+        <div class="cv-generator">
+            <div class="form-container">
+                <div class="photo-upload">
+                    <div class="photo-preview" id="photoPreview">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <label id="uploadLabel" for="photoInput">Upload Photo</label>
+                    <input type="file" id="photoInput" accept="image/*">
+                </div>
+                
+                <div class="form-section">
+                    <h2 id="personalInfoTitle">Personal Information</h2>
+                    <div class="form-group">
+                        <label for="fullName" id="fullNameLabel">Full Name</label>
+                        <input type="text" id="fullName" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="jobTitle" id="jobTitleLabel">Job Title</label>
+                        <input type="text" id="jobTitle" placeholder="e.g. Customs Clearance Executive">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" id="phoneLabel">Phone Number</label>
+                        <input type="text" id="phone" placeholder="+971XXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="whatsapp" id="whatsappLabel">WhatsApp</label>
+                        <input type="text" id="whatsapp" placeholder="+971XXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" id="emailLabel">Email</label>
+                        <input type="email" id="email" placeholder="your.email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="address" id="addressLabel">Location</label>
+                        <input type="text" id="address" placeholder="City, Country">
+                    </div>
+                    <div class="form-group">
+                        <label for="nationality" id="nationalityLabel">Nationality</label>
+                        <select id="nationality">
+                            <option value="">Select Nationality</option>
+                            <!-- سيتم إضافة جميع الجنسيات عبر JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender" id="genderLabel">Gender</label>
+                        <select id="gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="marital" id="maritalLabel">Marital Status</label>
+                        <select id="marital">
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="license" id="licenseLabel">Driving License</label>
+                        <select id="license">
+                            <option value="None">None</option>
+                            <option value="Valid">Valid</option>
+                        </select>
+                    </div>
+                    <div class="form-group license-group" id="licenseNumberGroup">
+                        <label for="licenseNumber" id="licenseNumberLabel">License Number</label>
+                        <input type="text" id="licenseNumber" placeholder="Enter license number">
+                    </div>
+                    <div class="form-group">
+                        <label for="linkedin" id="linkedinLabel">LinkedIn Profile</label>
+                        <input type="text" id="linkedin" placeholder="https://linkedin.com/in/yourprofile">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2 id="summaryTitle">Professional Summary</h2>
+                    <div class="form-group">
+                        <textarea id="summary" placeholder="Briefly describe your professional background, skills, and career objectives (3-5 sentences)"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2 id="educationTitle">Education</h2>
+                    <div class="form-group">
+                        <label for="educationLevel" id="educationLevelLabel">Education Level</label>
+                        <input type="text" id="educationLevel" placeholder="e.g. Bachelor's Degree in Business Administration">
+                    </div>
+                    <div class="form-group">
+                        <label for="graduationYear" id="graduationYearLabel">Graduation Year</label>
+                        <input type="text" id="graduationYear" placeholder="YYYY">
+                    </div>
+                    <div class="form-group">
+                        <label for="institution" id="institutionLabel">Institution</label>
+                        <input type="text" id="institution" placeholder="University Name, Country">
+                    </div>
+                    <div class="form-group">
+                        <label for="gpa" id="gpaLabel">GPA (if relevant)</label>
+                        <input type="text" id="gpa" placeholder="3.5/4.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="honors" id="honorsLabel">Honors/Awards</label>
+                        <textarea id="honors" placeholder="List any academic honors or awards"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2 id="experienceTitle">Work Experience</h2>
+                    <div class="form-group">
+                        <label for="job1Title" id="job1TitleLabel">Job Title</label>
+                        <input type="text" id="job1Title" placeholder="e.g. Customs Clearance Executive">
+                    </div>
+                    <div class="form-group">
+                        <label for="job1Company" id="job1CompanyLabel">Company</label>
+                        <input type="text" id="job1Company" placeholder="Company Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="job1Duration" id="job1DurationLabel">Duration</label>
+                        <input type="text" id="job1Duration" placeholder="MM/YYYY - MM/YYYY">
+                    </div>
+                    <div class="form-group">
+                        <label for="job1Description" id="job1DescriptionLabel">Responsibilities & Achievements (one per line)</label>
+                        <textarea id="job1Description" placeholder="Use action verbs: Managed, Developed, Increased, etc."></textarea>
+                    </div>
+                    
+                    <button type="button" class="btn-generate" id="addExperienceBtn" style="background-color: #2c3e50; margin-top: 10px;">Add Another Position</button>
+                </div>
+                
+                <div class="form-section">
+                    <h2 id="skillsTitle">Skills</h2>
+                    <div class="form-group">
+                        <label for="technicalSkills" id="technicalSkillsLabel">Technical Skills (one per line)</label>
+                        <textarea id="technicalSkills" placeholder="e.g. Customs documentation, Dubai Trade system"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="softSkills" id="softSkillsLabel">Soft Skills (one per line)</label>
+                        <textarea id="softSkills" placeholder="e.g. Problem-solving, Communication"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="languages" id="languagesLabel">Languages (one per line)</label>
+                        <textarea id="languages" placeholder="e.g. English (Fluent), Arabic (Native)"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2 id="certificationsTitle">Certifications</h2>
+                    <div class="form-group">
+                        <label for="certification1" id="certification1Label">Certification 1</label>
+                        <input type="text" id="certification1" placeholder="e.g. Certified Customs Specialist">
+                    </div>
+                    <div class="form-group">
+                        <label for="certification1Org" id="certification1OrgLabel">Issuing Organization</label>
+                        <input type="text" id="certification1Org" placeholder="Organization Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="certification1Year" id="certification1YearLabel">Year Obtained</label>
+                        <input type="text" id="certification1Year" placeholder="YYYY">
+                    </div>
+                </div>
+                
+                <button class="btn-generate" id="generateBtn">Generate CV PDF</button>
+            </div>
+            
+            <div class="preview-container">
+                <h2 id="previewTitle">CV Preview</h2>
+                <div class="cv-preview" id="cvPreview">
+                    <div class="cv-header">
+                        <div class="cv-photo">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="cv-info">
+                            <h1 class="cv-name">YOUR FULL NAME</h1>
+                            <h2 class="cv-title">PROFESSIONAL TITLE</h2>
+                            <div class="cv-contact">
+                                <p><strong>Phone:</strong> +971XXXXXXXX | <strong>WhatsApp:</strong> +971XXXXXXXX</p>
+                                <p><strong>Email:</strong> your.email@example.com | <strong>LinkedIn:</strong> linkedin.com/in/yourprofile</p>
+                                <p><strong>Location:</strong> City, Country</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2 id="previewSummaryTitle">PROFESSIONAL SUMMARY</h2>
+                        <p>Detail-oriented professional with X years of experience in [industry]. Proven track record in [key skills]. Seeking to leverage my expertise in [specific area] at [target company]. Strong skills in [relevant skills] with a focus on [specific value you bring].</p>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2 id="previewEducationTitle">EDUCATION</h2>
+                        <div class="cv-experience">
+                            <h3>Degree in Field of Study</h3>
+                            <p class="date">Graduated: YYYY</p>
+                            <p>University Name, Country | GPA: X.X/4.0</p>
+                            <p><em>Honors/Awards:</em> Dean's List, Scholarship Name</p>
+                        </div>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2 id="previewExperienceTitle">WORK EXPERIENCE</h2>
+                        <div class="cv-experience">
+                            <h3>Job Title</h3>
+                            <p class="date">MM/YYYY - Present</p>
+                            <p>Company Name, Location</p>
+                            <ul>
+                                <li>Managed customs clearance processes for imports/exports valued at $X monthly</li>
+                                <li>Reduced clearance times by X% through process optimization</li>
+                                <li>Maintained 100% compliance with UAE customs regulations</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2 id="previewSkillsTitle">SKILLS</h2>
+                        <div class="cv-skills">
+                            <h3>Technical Skills</h3>
+                            <ul>
+                                <li>Customs Documentation</li>
+                                <li>Dubai Trade System</li>
+                                <li>Import/Export Compliance</li>
+                            </ul>
+                            <h3>Soft Skills</h3>
+                            <ul>
+                                <li>Problem Solving</li>
+                                <li>Client Relations</li>
+                                <li>Time Management</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2 id="previewCertificationsTitle">CERTIFICATIONS</h2>
+                        <ul class="cv-experience">
+                            <li><strong>Certified Customs Specialist</strong> - Issuing Organization (YYYY)</li>
+                            <li><strong>Advanced Import/Export Certification</strong> - Training Institute (YYYY)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2 id="previewLanguagesTitle">LANGUAGES</h2>
+                        <ul class="cv-experience">
+                            <li>English (Fluent)</li>
+                            <li>Arabic (Native)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="cv-section">
+                        <h2>PERSONAL DETAILS</h2>
+                        <p><strong>Name:</strong> Your Full Name</p>
+                        <p><strong>Location:</strong> City, Country</p>
+                        <p><strong>Phone:</strong> +971XXXXXXXX</p>
+                        <p><strong>Email:</strong> your.email@example.com</p>
+                        <p><strong>Nationality:</strong> Your Nationality</p>
+                        <p><strong>Gender:</strong> Male/Female</p>
+                        <p><strong>Marital Status:</strong> Single/Married</p>
+                        <p><strong>Driving License:</strong> None/Valid</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p id="footerText">Professional CV Generator - ATS Compliant Template</p>
+            <div class="developer-info">
+                <span class="developer-name">Developed by HAMZA KASSEM ALSOUKI</span>
+                <span>Contact: <a href="tel:+971557018830">+971 55 701 8830</a> (Call/WhatsApp)</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage">Do you want to generate your CV as a PDF?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" id="confirmSave">Generate PDF</button>
+                <button class="modal-btn cancel" id="cancelSave">Continue Editing</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // قائمة بجميع جنسيات العالم
+        const nationalities = [
+            "Afghan", "Albanian", "Algerian", "American", "Andorran", "Angolan", 
+            "Antiguans", "Argentinean", "Armenian", "Australian", "Austrian", 
+            "Azerbaijani", "Bahamian", "Bahraini", "Bangladeshi", "Barbadian", 
+            "Barbudans", "Batswana", "Belarusian", "Belgian", "Belizean", 
+            "Beninese", "Bhutanese", "Bolivian", "Bosnian", "Brazilian", 
+            "British", "Bruneian", "Bulgarian", "Burkinabe", "Burmese", 
+            "Burundian", "Cambodian", "Cameroonian", "Canadian", "Cape Verdean", 
+            "Central African", "Chadian", "Chilean", "Chinese", "Colombian", 
+            "Comoran", "Congolese", "Costa Rican", "Croatian", "Cuban", 
+            "Cypriot", "Czech", "Danish", "Djibouti", "Dominican", 
+            "Dutch", "East Timorese", "Ecuadorean", "Egyptian", "Emirati", 
+            "Equatorial Guinean", "Eritrean", "Estonian", "Ethiopian", "Fijian", 
+            "Filipino", "Finnish", "French", "Gabonese", "Gambian", 
+            "Georgian", "German", "Ghanaian", "Greek", "Grenadian", 
+            "Guatemalan", "Guinea-Bissauan", "Guinean", "Guyanese", "Haitian", 
+            "Herzegovinian", "Honduran", "Hungarian", "I-Kiribati", "Icelander", 
+            "Indian", "Indonesian", "Iranian", "Iraqi", "Irish", 
+            "Israeli", "Italian", "Ivorian", "Jamaican", "Japanese", 
+            "Jordanian", "Kazakhstani", "Kenyan", "Kittian and Nevisian", "Kuwaiti", 
+            "Kyrgyz", "Laotian", "Latvian", "Lebanese", "Liberian", 
+            "Libyan", "Liechtensteiner", "Lithuanian", "Luxembourger", "Macedonian", 
+            "Malagasy", "Malawian", "Malaysian", "Maldivian", "Malian", 
+            "Maltese", "Marshallese", "Mauritanian", "Mauritian", "Mexican", 
+            "Micronesian", "Moldovan", "Monacan", "Mongolian", "Moroccan", 
+            "Mosotho", "Motswana", "Mozambican", "Namibian", "Nauruan", 
+            "Nepalese", "New Zealander", "Nicaraguan", "Nigerian", "Nigerien", 
+            "North Korean", "Northern Irish", "Norwegian", "Omani", "Pakistani", 
+            "Palauan", "Panamanian", "Papua New Guinean", "Paraguayan", "Peruvian", 
+            "Polish", "Portuguese", "Qatari", "Romanian", "Russian", 
+            "Rwandan", "Saint Lucian", "Salvadoran", "Samoan", "San Marinese", 
+            "Sao Tomean", "Saudi", "Scottish", "Senegalese", "Serbian", 
+            "Seychellois", "Sierra Leonean", "Singaporean", "Slovakian", "Slovenian", 
+            "Solomon Islander", "Somali", "South African", "South Korean", "Spanish", 
+            "Sri Lankan", "Sudanese", "Surinamer", "Swazi", "Swedish", 
+            "Swiss", "Syrian", "Taiwanese", "Tajik", "Tanzanian", 
+            "Thai", "Togolese", "Tongan", "Trinidadian or Tobagonian", "Tunisian", 
+            "Turkish", "Tuvaluan", "Ugandan", "Ukrainian", "Uruguayan", 
+            "Uzbekistani", "Venezuelan", "Vietnamese", "Welsh", "Yemenite", 
+            "Zambian", "Zimbabwean"
+        ];
+
+        // Language translations
+        const translations = {
+            en: {
+                mainTitle: "Professional CV Generator",
+                switchLanguage: "العربية",
+                uploadLabel: "Upload Photo",
+                personalInfoTitle: "Personal Information",
+                fullNameLabel: "Full Name",
+                jobTitleLabel: "Job Title",
+                phoneLabel: "Phone Number",
+                whatsappLabel: "WhatsApp",
+                emailLabel: "Email",
+                addressLabel: "Location",
+                nationalityLabel: "Nationality",
+                genderLabel: "Gender",
+                maritalLabel: "Marital Status",
+                licenseLabel: "Driving License",
+                licenseNumberLabel: "License Number",
+                linkedinLabel: "LinkedIn Profile",
+                summaryTitle: "Professional Summary",
+                educationTitle: "Education",
+                educationLevelLabel: "Education Level",
+                graduationYearLabel: "Graduation Year",
+                institutionLabel: "Institution",
+                gpaLabel: "GPA (if relevant)",
+                honorsLabel: "Honors/Awards",
+                experienceTitle: "Work Experience",
+                job1TitleLabel: "Job Title",
+                job1CompanyLabel: "Company",
+                job1DurationLabel: "Duration",
+                job1DescriptionLabel: "Responsibilities & Achievements (one per line)",
+                addExperienceBtn: "Add Another Position",
+                skillsTitle: "Skills",
+                technicalSkillsLabel: "Technical Skills (one per line)",
+                softSkillsLabel: "Soft Skills (one per line)",
+                languagesLabel: "Languages (one per line)",
+                certificationsTitle: "Certifications",
+                certification1Label: "Certification 1",
+                certification1OrgLabel: "Issuing Organization",
+                certification1YearLabel: "Year Obtained",
+                previewTitle: "CV Preview",
+                previewSummaryTitle: "PROFESSIONAL SUMMARY",
+                previewEducationTitle: "EDUCATION",
+                previewExperienceTitle: "WORK EXPERIENCE",
+                previewSkillsTitle: "SKILLS",
+                previewCertificationsTitle: "CERTIFICATIONS",
+                previewLanguagesTitle: "LANGUAGES",
+                generateBtn: "Generate CV PDF",
+                footerText: "Professional CV Generator - ATS Compliant Template",
+                modalMessage: "Do you want to generate your CV as a PDF?"
+            },
+            ar: {
+                mainTitle: "منشئ السيرة الذاتية الاحترافية",
+                switchLanguage: "English",
+                uploadLabel: "رفع صورة شخصية",
+                personalInfoTitle: "المعلومات الشخصية",
+                fullNameLabel: "الاسم الكامل",
+                jobTitleLabel: "المسمى الوظيفي",
+                phoneLabel: "رقم الهاتف",
+                whatsappLabel: "واتساب",
+                emailLabel: "البريد الإلكتروني",
+                addressLabel: "الموقع",
+                nationalityLabel: "الجنسية",
+                genderLabel: "الجنس",
+                maritalLabel: "الحالة الاجتماعية",
+                licenseLabel: "رخصة القيادة",
+                licenseNumberLabel: "رقم الرخصة",
+                linkedinLabel: "ملف LinkedIn",
+                summaryTitle: "ملخص مهني",
+                educationTitle: "التعليم",
+                educationLevelLabel: "المستوى التعليمي",
+                graduationYearLabel: "سنة التخرج",
+                institutionLabel: "المؤسسة التعليمية",
+                gpaLabel: "المعدل التراكمي (إن وجد)",
+                honorsLabel: "الجوائز/التكريمات",
+                experienceTitle: "الخبرة العملية",
+                job1TitleLabel: "المسمى الوظيفي",
+                job1CompanyLabel: "الشركة",
+                job1DurationLabel: "المدة",
+                job1DescriptionLabel: "المسؤوليات والإنجازات (سطر لكل نقطة)",
+                addExperienceBtn: "إضافة وظيفة أخرى",
+                skillsTitle: "المهارات",
+                technicalSkillsLabel: "المهارات التقنية (سطر لكل مهارة)",
+                softSkillsLabel: "المهارات الشخصية (سطر لكل مهارة)",
+                languagesLabel: "اللغات (سطر لكل لغة)",
+                certificationsTitle: "الشهادات",
+                certification1Label: "الشهادة 1",
+                certification1OrgLabel: "الجهة المانحة",
+                certification1YearLabel: "سنة الحصول",
+                previewTitle: "معاينة السيرة الذاتية",
+                previewSummaryTitle: "ملخص مهني",
+                previewEducationTitle: "التعليم",
+                previewExperienceTitle: "الخبرة العملية",
+                previewSkillsTitle: "المهارات",
+                previewCertificationsTitle: "الشهادات",
+                previewLanguagesTitle: "اللغات",
+                generateBtn: "إنشاء ملف PDF",
+                footerText: "منشئ السيرة الذاتية - نموذج متوافق مع أنظمة ATS",
+                modalMessage: "هل تريد إنشاء سيرتك الذاتية كملف PDF؟"
+            }
+        };
+
+        // Current language
+        let currentLang = 'en';
+
+        // Language switcher functionality
+        document.getElementById('switchLanguage').addEventListener('click', function() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            document.documentElement.lang = currentLang;
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            updateLanguage();
+        });
+
+        // Populate nationalities dropdown
+        function populateNationalities() {
+            const nationalitySelect = document.getElementById('nationality');
+            nationalities.sort().forEach(nationality => {
+                const option = document.createElement('option');
+                option.value = nationality;
+                option.textContent = nationality;
+                nationalitySelect.appendChild(option);
+            });
+        }
+
+        // Update all text elements to current language
+        function updateLanguage() {
+            const langData = translations[currentLang];
+            for (const [key, value] of Object.entries(langData)) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+            
+            // Update placeholders for Arabic
+            if (currentLang === 'ar') {
+                document.getElementById('fullName').placeholder = "الاسم الكامل";
+                document.getElementById('jobTitle').placeholder = "مثال: مسؤول إخلاء جمركي";
+                document.getElementById('phone').placeholder = "+971XXXXXXXX";
+                document.getElementById('whatsapp').placeholder = "+971XXXXXXXX";
+                document.getElementById('email').placeholder = "بريدك@example.com";
+                document.getElementById('address').placeholder = "المدينة، الدولة";
+                document.getElementById('educationLevel').placeholder = "مثال: بكالوريوس في إدارة الأعمال";
+                document.getElementById('graduationYear').placeholder = "سنة التخرج";
+                document.getElementById('institution').placeholder = "اسم الجامعة، الدولة";
+                document.getElementById('gpa').placeholder = "مثال: 3.5/4.0";
+                document.getElementById('honors').placeholder = "اذكر أي تكريمات أو جوائز";
+                document.getElementById('job1Title').placeholder = "مثال: مسؤول إخلاء جمركي";
+                document.getElementById('job1Company').placeholder = "اسم الشركة";
+                document.getElementById('job1Duration').placeholder = "الشهر/السنة - الشهر/السنة";
+                document.getElementById('job1Description').placeholder = "استخدم أفعالاً مثل: أدرجت، طورت، زدت...";
+                document.getElementById('technicalSkills').placeholder = "مثال: مستندات جمركية، نظام دبي تريد";
+                document.getElementById('softSkills').placeholder = "مثال: حل المشكلات، التواصل";
+                document.getElementById('languages').placeholder = "مثال: الإنجليزية (متقن)، العربية (لغة أم)";
+                document.getElementById('certification1').placeholder = "مثال: أخصائي جمركي معتمد";
+                document.getElementById('certification1Org').placeholder = "اسم الجهة المانحة";
+                document.getElementById('certification1Year').placeholder = "سنة الحصول";
+                document.getElementById('licenseNumber').placeholder = "أدخل رقم الرخصة";
+                document.getElementById('linkedin').placeholder = "https://linkedin.com/in/ملفك";
+                document.getElementById('summary').placeholder = "صف بإيجاز خلفيتك المهنية ومهاراتك وأهدافك (3-5 جمل)";
+            } else {
+                document.getElementById('fullName').placeholder = "Enter your full name";
+                document.getElementById('jobTitle').placeholder = "e.g. Customs Clearance Executive";
+                document.getElementById('phone').placeholder = "+971XXXXXXXX";
+                document.getElementById('whatsapp').placeholder = "+971XXXXXXXX";
+                document.getElementById('email').placeholder = "your.email@example.com";
+                document.getElementById('address').placeholder = "City, Country";
+                document.getElementById('educationLevel').placeholder = "e.g. Bachelor's Degree in Business Administration";
+                document.getElementById('graduationYear').placeholder = "YYYY";
+                document.getElementById('institution').placeholder = "University Name, Country";
+                document.getElementById('gpa').placeholder = "3.5/4.0";
+                document.getElementById('honors').placeholder = "List any academic honors or awards";
+                document.getElementById('job1Title').placeholder = "e.g. Customs Clearance Executive";
+                document.getElementById('job1Company').placeholder = "Company Name";
+                document.getElementById('job1Duration').placeholder = "MM/YYYY - MM/YYYY";
+                document.getElementById('job1Description').placeholder = "Use action verbs: Managed, Developed, Increased, etc.";
+                document.getElementById('technicalSkills').placeholder = "e.g. Customs documentation, Dubai Trade system";
+                document.getElementById('softSkills').placeholder = "e.g. Problem-solving, Communication";
+                document.getElementById('languages').placeholder = "e.g. English (Fluent), Arabic (Native)";
+                document.getElementById('certification1').placeholder = "e.g. Certified Customs Specialist";
+                document.getElementById('certification1Org').placeholder = "Organization Name";
+                document.getElementById('certification1Year').placeholder = "YYYY";
+                document.getElementById('licenseNumber').placeholder = "Enter license number";
+                document.getElementById('linkedin').placeholder = "https://linkedin.com/in/yourprofile";
+                document.getElementById('summary').placeholder = "Briefly describe your professional background, skills, and career objectives (3-5 sentences)";
+            }
+        }
+
+        // Driving license number field toggle
+        document.getElementById('license').addEventListener('change', function() {
+            const licenseNumberGroup = document.getElementById('licenseNumberGroup');
+            if(this.value === 'Valid') {
+                licenseNumberGroup.style.display = 'block';
+            } else {
+                licenseNumberGroup.style.display = 'none';
+            }
+        });
+
+        // Photo upload functionality
+        const photoInput = document.getElementById('photoInput');
+        const photoPreview = document.getElementById('photoPreview');
+        
+        document.getElementById('uploadLabel').addEventListener('click', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                photoInput.click();
+            }
+        });
+        
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    photoPreview.innerHTML = `<img src="${event.target.result}" alt="Profile Photo">`;
+                    
+                    // Update preview
+                    const cvPhoto = document.querySelector('.cv-photo');
+                    cvPhoto.innerHTML = `<img src="${event.target.result}" alt="Profile Photo">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Form fields update preview
+        const formFields = [
+            'fullName', 'jobTitle', 'phone', 'whatsapp', 'email', 'address', 'nationality',
+            'gender', 'marital', 'license', 'licenseNumber', 'linkedin', 'summary', 
+            'educationLevel', 'graduationYear', 'institution', 'gpa', 'honors',
+            'job1Title', 'job1Company', 'job1Duration', 'job1Description',
+            'technicalSkills', 'softSkills', 'languages',
+            'certification1', 'certification1Org', 'certification1Year'
+        ];
+        
+        formFields.forEach(field => {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener('input', updatePreview);
+            }
+        });
+        
+        function updatePreview() {
+            // Update personal info
+            document.querySelector('.cv-name').textContent = document.getElementById('fullName').value || (currentLang === 'ar' ? 'الاسم الكامل' : 'FULL NAME');
+            document.querySelector('.cv-title').textContent = document.getElementById('jobTitle').value || (currentLang === 'ar' ? 'المسمى الوظيفي' : 'PROFESSIONAL TITLE');
+            
+            const phone = document.getElementById('phone').value || '';
+            const whatsapp = document.getElementById('whatsapp').value || '';
+            const email = document.getElementById('email').value || '';
+            const linkedin = document.getElementById('linkedin').value || '';
+            const address = document.getElementById('address').value || '';
+            
+            document.querySelector('.cv-contact p:first-child').innerHTML = 
+                `<strong>${currentLang === 'ar' ? 'هاتف:' : 'Phone:'}</strong> ${phone} | <strong>${currentLang === 'ar' ? 'واتساب:' : 'WhatsApp:'}</strong> ${whatsapp}`;
+            document.querySelector('.cv-contact p:nth-child(2)').innerHTML = 
+                `<strong>${currentLang === 'ar' ? 'بريد إلكتروني:' : 'Email:'}</strong> ${email} | <strong>LinkedIn:</strong> ${linkedin ? linkedin : (currentLang === 'ar' ? 'غير متوفر' : 'Not provided')}`;
+            document.querySelector('.cv-contact p:last-child').innerHTML = 
+                `<strong>${currentLang === 'ar' ? 'الموقع:' : 'Location:'}</strong> ${address}`;
+            
+            // Update summary
+            document.querySelector('.cv-section:nth-of-type(2) p').textContent = 
+                document.getElementById('summary').value || (currentLang === 'ar' ? 'ملخص مهني يصف خبراتك ومهاراتك وأهدافك المهنية' : 'Professional summary describing your experience, skills, and career objectives');
+            
+            // Update education
+            const educationSection = document.querySelector('.cv-section:nth-of-type(3) .cv-experience');
+            const gpa = document.getElementById('gpa').value ? ` | ${currentLang === 'ar' ? 'المعدل:' : 'GPA:'} ${document.getElementById('gpa').value}` : '';
+            const honors = document.getElementById('honors').value ? `<p><em>${currentLang === 'ar' ? 'التكريمات/الجوائز:' : 'Honors/Awards:'}</em> ${document.getElementById('honors').value}</p>` : '';
+            
+            educationSection.innerHTML = `
+                <h3>${document.getElementById('educationLevel').value || (currentLang === 'ar' ? 'المستوى التعليمي' : 'Education Level')}</h3>
+                <p class="date">${currentLang === 'ar' ? 'سنة التخرج:' : 'Graduated:'} ${document.getElementById('graduationYear').value || 'YYYY'}${gpa}</p>
+                <p>${document.getElementById('institution').value || (currentLang === 'ar' ? 'المؤسسة التعليمية' : 'Institution')}</p>
+                ${honors}
+            `;
+            
+            // Update work experience
+            const job1Section = document.querySelector('.cv-section:nth-of-type(4) .cv-experience');
+            const jobDesc = document.getElementById('job1Description').value 
+                ? document.getElementById('job1Description').value.split('\n').filter(item => item.trim() !== '').map(item => `<li>${item.trim()}</li>`).join('') 
+                : `<li>${currentLang === 'ar' ? 'وصف المسؤوليات والإنجازات' : 'Describe responsibilities and achievements'}</li>`;
+            
+            job1Section.innerHTML = `
+                <h3>${document.getElementById('job1Title').value || (currentLang === 'ar' ? 'المسمى الوظيفي' : 'Job Title')}</h3>
+                <p class="date">${document.getElementById('job1Duration').value || (currentLang === 'ar' ? 'المدة' : 'Duration')}</p>
+                <p>${document.getElementById('job1Company').value || (currentLang === 'ar' ? 'الشركة' : 'Company')}</p>
+                <ul>${jobDesc}</ul>
+            `;
+            
+            // Update skills
+            const skillsSection = document.querySelector('.cv-skills');
+            const techSkills = document.getElementById('technicalSkills').value 
+                ? document.getElementById('technicalSkills').value.split('\n').filter(skill => skill.trim() !== '').map(skill => `<li>${skill.trim()}</li>`).join('')
+                : `<li>${currentLang === 'ar' ? 'المهارة التقنية ١' : 'Technical Skill 1'}</li>`;
+            const softSkills = document.getElementById('softSkills').value 
+                ? document.getElementById('softSkills').value.split('\n').filter(skill => skill.trim() !== '').map(skill => `<li>${skill.trim()}</li>`).join('')
+                : `<li>${currentLang === 'ar' ? 'المهارة الشخصية ١' : 'Soft Skill 1'}</li>`;
+            
+            skillsSection.innerHTML = `
+                <h2>${currentLang === 'ar' ? 'المهارات' : 'SKILLS'}</h2>
+                <h3>${currentLang === 'ar' ? 'المهارات التقنية' : 'Technical Skills'}</h3>
+                <ul>${techSkills}</ul>
+                <h3>${currentLang === 'ar' ? 'المهارات الشخصية' : 'Soft Skills'}</h3>
+                <ul>${softSkills}</ul>
+            `;
+            
+            // Update certifications
+            const certSection = document.querySelector('.cv-section:nth-of-type(6)');
+            const cert1 = document.getElementById('certification1').value;
+            const cert1Org = document.getElementById('certification1Org').value;
+            const cert1Year = document.getElementById('certification1Year').value;
+            
+            if (cert1 || cert1Org || cert1Year) {
+                certSection.innerHTML = `
+                    <h2>${currentLang === 'ar' ? 'الشهادات' : 'CERTIFICATIONS'}</h2>
+                    <ul class="cv-experience">
+                        ${cert1 ? `<li><strong>${cert1}</strong>${cert1Org ? ` - ${cert1Org}` : ''}${cert1Year ? ` (${cert1Year})` : ''}</li>` : ''}
+                    </ul>
+                `;
+            } else {
+                certSection.innerHTML = `
+                    <h2>${currentLang === 'ar' ? 'الشهادات' : 'CERTIFICATIONS'}</h2>
+                    <ul class="cv-experience">
+                        <li>${currentLang === 'ar' ? 'الشهادة أو التدريب (اختياري)' : 'Certification or Training (optional)'}</li>
+                    </ul>
+                `;
+            }
+            
+            // Update languages
+            const languagesSection = document.querySelector('.cv-section:nth-of-type(7)');
+            const languages = document.getElementById('languages').value 
+                ? document.getElementById('languages').value.split('\n').filter(lang => lang.trim() !== '').map(lang => `<li>${lang.trim()}</li>`).join('')
+                : `<li>${currentLang === 'ar' ? 'اللغة ١' : 'Language 1'}</li><li>${currentLang === 'ar' ? 'اللغة ٢' : 'Language 2'}</li>`;
+            
+            languagesSection.innerHTML = `
+                <h2>${currentLang === 'ar' ? 'اللغات' : 'LANGUAGES'}</h2>
+                <ul class="cv-experience">${languages}</ul>
+            `;
+            
+            // Update personal details
+            const personalDetails = document.querySelector('.cv-section:last-child');
+            personalDetails.innerHTML = `
+                <h2>${currentLang === 'ar' ? 'تفاصيل شخصية' : 'PERSONAL DETAILS'}</h2>
+                <p><strong>${currentLang === 'ar' ? 'الاسم:' : 'Name:'}</strong> ${document.getElementById('fullName').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'الموقع:' : 'Location:'}</strong> ${document.getElementById('address').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'هاتف:' : 'Phone:'}</strong> ${document.getElementById('phone').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'بريد إلكتروني:' : 'Email:'}</strong> ${document.getElementById('email').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'الجنسية:' : 'Nationality:'}</strong> ${document.getElementById('nationality').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'الجنس:' : 'Gender:'}</strong> ${document.getElementById('gender').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'الحالة الاجتماعية:' : 'Marital Status:'}</strong> ${document.getElementById('marital').value || ''}</p>
+                <p><strong>${currentLang === 'ar' ? 'رخصة القيادة:' : 'Driving License:'}</strong> ${document.getElementById('license').value || ''} ${document.getElementById('license').value === 'Valid' && document.getElementById('licenseNumber').value ? `(${document.getElementById('licenseNumber').value})` : ''}</p>
+            `;
+        }
+
+        // Modal functionality
+        const modal = document.getElementById('confirmationModal');
+        const confirmBtn = document.getElementById('confirmSave');
+        const cancelBtn = document.getElementById('cancelSave');
+        const generateBtn = document.getElementById('generateBtn');
+        
+        generateBtn.addEventListener('click', function() {
+            modal.style.display = 'block';
+        });
+        
+        confirmBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            generatePDF();
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Generate PDF with multiple pages
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            
+            // Create PDF with A4 dimensions (210mm x 297mm)
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            // Get the CV preview element
+            const element = document.getElementById('cvPreview');
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            
+            // Use html2canvas to capture the element
+            html2canvas(element, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true,
+                width: element.offsetWidth,
+                height: element.scrollHeight,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: element.scrollWidth
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = pageWidth - 20; // ترك هامش 10مم من كل جانب
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                let position = 0;
+                let remainingHeight = imgHeight;
+                
+                // Add first page
+                doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                remainingHeight -= pageHeight;
+                
+                // Add more pages if needed
+                while (remainingHeight >= 0) {
+                    doc.addPage();
+                    position = - (imgHeight - remainingHeight - 10);
+                    doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    remainingHeight -= pageHeight;
+                }
+                
+                // Save the PDF
+                const fileName = document.getElementById('fullName').value 
+                    ? `${document.getElementById('fullName').value.replace(/\s+/g, '_')}_CV.pdf` 
+                    : 'Professional_CV.pdf';
+                doc.save(fileName);
+            });
+        }
+
+        // Initialize license number field
+        document.getElementById('licenseNumberGroup').style.display = 'none';
+        
+        // Initialize the form
+        populateNationalities();
+        updateLanguage();
+    </script>
+</body>
+</html>
